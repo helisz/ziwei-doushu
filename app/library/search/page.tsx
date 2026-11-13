@@ -1,17 +1,19 @@
 /**
  * /library/search?q=xxx — 搜索结果页
+ *
+ * 静态导出（output: export）下不能在服务端读 searchParams：
+ * 页面本身是纯客户端组件，用 useSearchParams 在浏览器里取 q。
  */
+'use client';
 
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { searchClassics, getParagraphById } from '@/lib/classics';
 
-export const metadata = {
-  title: '搜索 · 古籍原典库',
-};
-
-export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const sp = await searchParams;
-  const q = sp.q?.trim() || '';
+function SearchInner() {
+  const sp = useSearchParams();
+  const q = sp.get('q')?.trim() || '';
   const hits = q ? searchClassics(q, 50) : [];
 
   return (
@@ -117,5 +119,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         mark { background: rgba(184,146,42,0.3); color: #8b6a14; padding: 0 2px; border-radius: 2px; font-weight: 600; }
       `}</style>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" style={{ background: 'var(--bg-page)' }} />}>
+      <SearchInner />
+    </Suspense>
   );
 }

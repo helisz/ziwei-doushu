@@ -33,7 +33,11 @@ export const dynamicParams = false;
 export async function generateStaticParams() {
   const routes = getAllKnowledgeRoutes();
   // URL 用拼音 slug 替代中文，避开 Vercel/CDN 中文路由边界问题
-  return routes.map(r => ({ star: r.slug, topic: r.topic }));
+  const params = routes.map(r => ({ star: r.slug, topic: r.topic }));
+  // 开源版 STAR_DB 置空 → routes 为 0 条。`output: export` 要求每个动态路由至少
+  // 产出一条静态参数，否则构建失败；占位一条（dynamicParams=false 时该路径 404，
+  // 列表页照常可用）。完整内容库上线后 routes 非空，占位自动被真实路由取代。
+  return params.length > 0 ? params : [{ star: '__none__', topic: 'overview' as TopicKey }];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ star: string; topic: string }> }) {
